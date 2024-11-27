@@ -11,11 +11,11 @@ set -vx
 wget -qO- uny.nu/pkg | bash -s buildsys
 
 ### Installing build dependencies
-#unyp install python expat openssl
+unyp install python expat openssl
 
-#pip3_bin=(/uny/pkg/python/*/bin/pip3)
-#"${pip3_bin[0]}" install --upgrade pip
-#"${pip3_bin[0]}" install docutils pygments
+pip3_bin=(/uny/pkg/python/*/bin/pip3)
+"${pip3_bin[0]}" install --upgrade pip
+"${pip3_bin[0]}" install six
 
 ### Getting Variables from files
 UNY_AUTO_PAT="$(cat UNY_AUTO_PAT)"
@@ -35,13 +35,13 @@ mkdir -pv /uny/sources
 cd /uny/sources || exit
 
 pkgname="gdb"
-pkggit="https://github.com/gdb/gdb.git refs/tags/*"
+pkggit="https://sourceware.org/git/binutils-gdb.git refs/tags/*"
 gitdepth="--depth=1"
 
 ### Get version info from git remote
 # shellcheck disable=SC2086
-latest_head="$(git ls-remote --refs --tags --sort="v:refname" $pkggit | grep -E "v[0-9.]+$" | tail --lines=1)"
-latest_ver="$(echo "$latest_head" | grep -o "v[0-9.].*" | sed "s|v||")"
+latest_head="$(git ls-remote --refs --tags --sort="v:refname" $pkggit | grep -E "gdb-[0-9.]+-release$" | tail --lines=1)"
+latest_ver="$(echo "$latest_head" | grep -o "gdb-[0-9.].*" | sed -e "s|gdb-||" -e "s|-release||")"
 latest_commit_id="$(echo "$latest_head" | cut --fields=1)"
 
 version_details
@@ -51,9 +51,9 @@ echo "newer" >release-"$pkgname"
 
 git_clone_source_repo
 
-#cd "$pkg_git_repo_dir" || exit
-#./autogen.sh
-#cd /uny/sources || exit
+cd "$pkg_git_repo_dir" || exit
+./configure --disable-binutils --disable-ld --disable-gold --disable-gas --disable-sim --disable-gprof --disable-gprofng --disable-intl
+cd /uny/sources || exit
 
 archiving_source
 
@@ -77,12 +77,20 @@ get_include_paths
 
 unset LD_RUN_PATH
 
-./configure \
-    --prefix=/uny/pkg/"$pkgname"/"$pkgver"
+mkdir build
+cd build || exit
+
+python3_bin=(/uny/pkg/python/*/bin/python3)
+
+../configure \
+    --prefix=/uny/pkg/"$pkgname"/"$pkgver" \
+    --with-system-readline \
+    --with-python="${python3_bin[0]}"
 
 make -j"$(nproc)"
-make -j"$(nproc)" check 
-make -j"$(nproc)" install
+
+make -j"$(nproc)" -C gdb install
+make -j"$(nproc)" -C gdbserver install
 
 ####################################################
 ### End of individual build script
