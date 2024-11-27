@@ -53,6 +53,7 @@ git_clone_source_repo
 
 cd "$pkg_git_repo_dir" || exit
 ./configure --disable-binutils --disable-ld --disable-gold --disable-gas --disable-sim --disable-gprof --disable-gprofng --disable-intl
+rm -rf binutils ld gold gas sim gprof gprofng
 cd /uny/sources || exit
 
 archiving_source
@@ -85,7 +86,8 @@ python3_bin=(/uny/pkg/python/*/bin/python3)
 ../configure \
     --prefix=/uny/pkg/"$pkgname"/"$pkgver" \
     --with-system-readline \
-    --with-python="${python3_bin[0]}"
+    --with-python="${python3_bin[0]}" \
+    --disable-binutils --disable-ld --disable-gold --disable-gas --disable-sim --disable-gprof --disable-gprofng --disable-intl
 
 make -j"$(nproc)"
 
