@@ -87,6 +87,7 @@ python3_bin=(/uny/pkg/python/*/bin/python3)
     --prefix=/uny/pkg/"$pkgname"/"$pkgver" \
     --with-system-readline \
     --with-python="${python3_bin[0]}" \
+    --without-auto-load-safe-path \
     --disable-binutils --disable-ld --disable-gold --disable-gas --disable-sim --disable-gprof --disable-gprofng --disable-intl
 
 make -j"$(nproc)"
